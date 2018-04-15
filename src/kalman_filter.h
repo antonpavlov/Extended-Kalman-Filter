@@ -107,8 +107,6 @@ class KalmanFilter {
     public:
         // state vector
         Eigen::VectorXd x_;
-        // measurement vector
-        //Eigen::VectorXd z_;
         // state covariance matrix
         Eigen::MatrixXd P_;
         // state transition matrix
@@ -119,16 +117,6 @@ class KalmanFilter {
         Eigen::MatrixXd H_;
         // measurement covariance matrix
         Eigen::MatrixXd R_;
-        //
-        //Eigen::VectorXd y_;
-        //
-        //Eigen::MatrixXd S_;
-        //
-        //Eigen::MatrixXd K_;
-        //
-        //Eigen::MatrixXd Hj_;
-        //
-        //Eigen::MatrixXd I_;
 
         /* Constructor - blank estimator */
         KalmanFilter();

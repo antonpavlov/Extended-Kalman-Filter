@@ -190,12 +190,15 @@
 //}
 //
 
-
+#include <iostream>
 #include "kalman_filter.h"
 #include "tools.h"
 
+using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+
+#define EPS 0.000001
 
 // Please note that the Eigen library does not initialize
 // VectorXd or MatrixXd objects with zeros upon creation.
@@ -206,24 +209,27 @@ KalmanFilter::~KalmanFilter() {}
 
 void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
                         MatrixXd &H_in, MatrixXd &R_in, MatrixXd &Q_in) {
-  x_ = x_in;
-  P_ = P_in;
-  F_ = F_in;
-  H_ = H_in;
-  R_ = R_in;
-  Q_ = Q_in;
+    x_ = x_in;
+    P_ = P_in;
+    F_ = F_in;
+    H_ = H_in;
+    R_ = R_in;
+    Q_ = Q_in;
 }
 
 void KalmanFilter::Predict() {
     /* predict the state */
     x_ = F_ * x_;
-    P_ = F_ * P_ * F_.transpose() + Q_;
+    MatrixXd Ft = F_.transpose();
+    P_ = F_ * P_ * Ft + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
     // Kalman filter update step. Equations from the lectures
     VectorXd y_ = z - H_ * x_; // error calculation
     
+   
+    
     MatrixXd Ht = H_.transpose();
     MatrixXd S = H_ * P_ * Ht + R_;
     MatrixXd Si = S.inverse();
@@ -233,38 +239,80 @@ void KalmanFilter::Update(const VectorXd &z) {
     int x_size = x_.size();
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
     P_ = (I - K * H_) * P_;
-//
-//    /* KF Measurement update */
-//    y_ = z - H_ * x_;
-    
-//    MatrixXd Ht = H_.transpose();
-//    MatrixXd S = H_ * P_ * Ht + R_;
-//    MatrixXd Si = S.inverse();
-//    MatrixXd K =  P_ * Ht * Si;
-//    // New state
-//    x_ = x_ + (K * y);
-//    int x_size = x_.size();
-//    MatrixXd I = MatrixXd::Identity(x_size, x_size);
-//    P_ = (I - K * H_) * P_;
-//
-//    S_ = H_ * P_ * H_.transpose() + R_;
-//    K_ =  P_ * H_.transpose() * S_.inverse();
-//
-//    //new state
-//    x_ = x_ + (K_ * y_);
-//    MatrixXd I = MatrixXd::Identity(4, 4);
-//    P_ = (I_ - K_ * H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
     /* Update the state by using Extended Kalman Filter equations */
-    double rho = sqrt(pow(x_[0], 2) + pow(x_[1], 2));
-    double theta = atan(x_(1) / x_(0));
-    double rho_dot = (x_(0)*x_(2) + x_(1)*x_(3)) / rho;
+//    if (x_[0] > 0){
+//        if (fabs(x_(0)) < EPS){
+//            x_(0) = EPS;
+//        }
+//    } else {
+//            if (fabs(x_(0)) < EPS){
+//                x_(0) = - EPS;
+//            }
+//    }
+//    if (fabs(x_(0)) < EPS){
+//        x_(0) = EPS;
+//    }
+//    if (fabs(x_(1)) < EPS){
+//        x_(1) = EPS;
+//    }
+    //Normalizing factor for angle //
+    
     VectorXd h = VectorXd(3); // h(x_)
-    h << rho, theta, rho_dot;
+//    double theta;
+//    double rho = sqrt(pow(x_[0], 2) + pow(x_[1], 2));
+////    if (fabs(rho) < EPS){
+////        x_(0) = - EPS;
+////    }
+//    double angle_ = atan(x_(1) / x_(0));
+//    std::cout<< "Rho: " << rho << endl;
+//    std::cout<< "Angle: " << angle_ << endl;
+    
+//    double pi_ = M_PI;
+//    if (angle_ > 0){
+//        // Positive
+//        if (angle_ > (2*pi_)){
+//            double c = angle_/pi_;
+//            theta = angle_ - 2 * pi_ * c;
+//        } else {
+//            theta = angle_;
+//        }
+//    } else {
+//        // Negative
+//        if (angle_ > -(2*pi_)){
+//            double c = angle_/pi_;
+//            theta = angle_ + 2 * pi_ * c;
+//        } else {
+//            theta = angle_;
+//        }
+//    }
+    //theta = angle_;
+    
+    //double rho_dot = (x_(0)*x_(2) + x_(1)*x_(3)) / rho;
+    
+    
+    
+    const double THRESH = 0.000001;
+    
+    const double px = x_(0);
+    const double py = x_(1);
+    const double vx = x_(2);
+    const double vy = x_(3);
+    
+    const double rho = sqrt(px * px + py * py);
+    const double phi = atan2(py, px); //accounts for atan2(0, 0)
+    const double drho = (rho > THRESH) ? ( px * vx + py * vy ) / rho : 0.0;
+    
+    
+    
+    //h << rho, theta, rho_dot;
+    h << rho, phi, drho;
     
     VectorXd y_ = z - h;
+    
+     if (y_.size() == 3) y_(1) = atan2(sin(y_(1)), cos(y_(1))); //if radar measurement, normalize angle
     
     MatrixXd Ht = H_.transpose();
     MatrixXd S = H_ * P_ * Ht + R_;
@@ -275,15 +323,6 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     int x_size = x_.size();
     MatrixXd I = MatrixXd::Identity(x_size, x_size);
     P_ = (I - K * H_) * P_;
-    
-//    S_ = H_ * P_ * H_.transpose() + R_;
-//    K_ =  P_ * H_.transpose() * S_.inverse();
-//
-//    //new state
-//    x_ = x_ + (K_ * y_);
-//    //long x_size = x_.size();
-//    MatrixXd I = MatrixXd::Identity(4, 4);
-//    P_ = (I_ - K_ * H_) * P_;
 }
 
 
