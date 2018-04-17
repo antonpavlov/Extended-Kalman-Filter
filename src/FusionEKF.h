@@ -41,15 +41,6 @@ class FusionEKF {
         Eigen::MatrixXd H_laser_;
         Eigen::MatrixXd Hj_;
     
-        // Kalman filter variables
-        //Eigen::VectorXd x_;  // State space vector
-        //Eigen::VectorXd z_;  // Observation vector
-        //Eigen::VectorXd y_;  // Observation prediction
-        //Eigen::MatrixXd S_;
-        //Eigen::MatrixXd K_;  // Kalman gain
-        //Eigen::MatrixXd P_;  // Covariance matrix
-    
-        float noise_ax, noise_ay;
 };
 
 #endif /* FusionEKF_H_ */

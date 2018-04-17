@@ -8,6 +8,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+#define DEBUG   0
+
 /* Constructor */
 FusionEKF::FusionEKF() {
     is_initialized_ = false;
@@ -22,8 +24,6 @@ FusionEKF::FusionEKF() {
     H_laser_ << 1, 0, 0, 0,
                 0, 1, 0, 0;
     
-    
-
     //measurement covariance matrix - laser
     R_laser_ << 0.0225, 0,
                 0,      0.0225;
@@ -74,10 +74,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         }
         
         // Print init states
-        cout << "EKF state init: " << endl;
-        cout << ekf_.x_ << endl;
-        cout << "EKF covariance init: " << endl;
-        cout << ekf_.P_ << endl;
+        if (DEBUG == 1){
+            cout << "EKF state init: " << endl;
+            cout << ekf_.x_ << endl;
+            cout << "EKF covariance init: " << endl;
+            cout << ekf_.P_ << endl;
+        }
+        
         // done initializing, no need to predict or update
         is_initialized_ = true;
         return;
@@ -87,44 +90,49 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     *  Prediction
     ****************************************************************************/
     // Calculate the timestep between measurements in seconds
-    float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;    //dt - expressed in seconds
+    float delta_t = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;    //dt - expressed in seconds
     previous_timestamp_ = measurement_pack.timestamp_;
     
     // State transition matrix update
     ekf_.F_ = MatrixXd(4, 4);
     // It is necessary to setup matrix F all the time, because delta_t may vary
-    ekf_.F_ <<  1, 0, dt, 0,
-                0, 1, 0, dt,
+    ekf_.F_ <<  1, 0, delta_t, 0,
+                0, 1, 0, delta_t,
                 0, 0, 1, 0,
                 0, 0, 0, 1;
     
     // Noise covariance matrix computation
     float noise_ax = 9.0;
     float noise_ay = 9.0;
-    float dt_2 = dt * dt; //dt^2
-    float dt_3 = dt_2 * dt; //dt^3
-    float dt_4 = dt_3 * dt; //dt^4
-    float dt_4_4 = dt_4 / 4; //dt^4/4
-    float dt_3_2 = dt_3 / 2; //dt^3/2
+    float delta_t_squared = delta_t * delta_t; //dt^2
+    float delta_t_cubic = delta_t_squared * delta_t; //dt^3
+    float delta_t_pow4 = delta_t_cubic * delta_t; //dt^4
+    float delta_t_pow4_by4 = delta_t_pow4 / 4; //dt^4/4
+    float delta_t_cubic_by2 = delta_t_cubic / 2; //dt^3/2
     
     ekf_.Q_ = MatrixXd(4, 4);
-    ekf_.Q_ <<  dt_4_4 * noise_ax,  0,                  dt_3_2 * noise_ax,  0,
-                0,                  dt_4_4 * noise_ay,  0,                  dt_3_2 * noise_ay,
-                dt_3_2 * noise_ax,  0,                  dt_2 * noise_ax,    0,
-                0,                  dt_3_2 * noise_ay,  0,                  dt_2 * noise_ay;
+    ekf_.Q_ <<  delta_t_pow4_by4 * noise_ax,  0,                  delta_t_cubic_by2 * noise_ax,  0,
+                0,                  delta_t_pow4_by4 * noise_ay,  0,                  delta_t_cubic_by2 * noise_ay,
+                delta_t_cubic_by2 * noise_ax,  0,                  delta_t_squared * noise_ax,    0,
+                0,                  delta_t_cubic_by2 * noise_ay,  0,                  delta_t_squared * noise_ay;
     
     // Debug by print
-    //cout << "F: " << endl;
-    //cout << ekf_.F_ << endl;
-    //cout << "Q: " << endl;
-    //cout << ekf_.Q_ << endl;
+    if (DEBUG == 1){
+        cout << "Prediction step F: " << endl;
+        cout << ekf_.F_ << endl;
+        cout << "Prediction step Q: " << endl;
+        cout << ekf_.Q_ << endl;
+    }
     
     ekf_.Predict();
     /* print the output */
-    std::cout << "Predict state x_ = " << endl;
-    std::cout << ekf_.x_ << endl;
-    std::cout << "Predict covariance P_ = " << endl;
-    std::cout << ekf_.P_ << endl;
+    if (DEBUG == 1){
+        cout << "Predicted state x_ = " << endl;
+        cout << ekf_.x_ << endl;
+        cout << "Predicted covariance P_ = " << endl;
+        cout << ekf_.P_ << endl;
+    }
+    
     
     /*****************************************************************************
     *  Update
@@ -133,35 +141,45 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         // Radar updates
         ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
         ekf_.R_ = R_radar_;
-        std::cout << "Update step radar H_ = " << endl;
-        std::cout << ekf_.H_ << endl;
-        std::cout << "Update step radar R_ = " << endl;
-        std::cout << ekf_.R_ << endl;
+        if (DEBUG == 1){
+            cout << "Update step radar H_ = " << endl;
+            cout << ekf_.H_ << endl;
+            cout << "Update step radar R_ = " << endl;
+            cout << ekf_.R_ << endl;
+        }
         ekf_.UpdateEKF(measurement_pack.raw_measurements_);
-        std::cout << "Update step x_ = " << endl;
-        std::cout << ekf_.x_ << endl;
-        std::cout << "Update step covariance P_ = " << endl;
-        std::cout << ekf_.P_ << endl;
-    } else {
+        if (DEBUG == 1){
+            cout << "Update step x_ = " << endl;
+            cout << ekf_.x_ << endl;
+            cout << "Update step covariance P_ = " << endl;
+            cout << ekf_.P_ << endl;
+        }
+    }
+    else
+    {
         // Laser updates
         ekf_.H_ = H_laser_;
         ekf_.R_ = R_laser_;
-        std::cout << "Update step laser H_ = " << endl;
-        std::cout << ekf_.H_ << endl;
-        std::cout << "Update step laser R_ = " << endl;
-        std::cout << ekf_.R_ << endl;
+        if (DEBUG == 1){
+            cout << "Update step laser H_ = " << endl;
+            cout << ekf_.H_ << endl;
+            cout << "Update step laser R_ = " << endl;
+            cout << ekf_.R_ << endl;
+        }
         ekf_.Update(measurement_pack.raw_measurements_);
-        std::cout << "Update step x_ = " << endl;
-        std::cout << ekf_.x_ << endl;
-        std::cout << "Update step covariance P_ = " << endl;
-        std::cout << ekf_.P_ << endl;
+        if (DEBUG == 1){
+            cout << "Update step x_ = " << endl;
+            cout << ekf_.x_ << endl;
+            cout << "Update step covariance P_ = " << endl;
+            cout << ekf_.P_ << endl;
+        }
     }
 
     /* print the output */
-    cout << "x_ = " << endl;
-    cout << ekf_.x_ << endl;
-    cout << "P_ = " << endl;
-    cout << ekf_.P_ << endl;
-    //cout << "dt = " << endl;
-    //cout << ekf_.P_ << endl;
+    if (DEBUG == 1){
+        cout << "x_ = " << endl;
+        cout << ekf_.x_ << endl;
+        cout << "P_ = " << endl;
+        cout << ekf_.P_ << endl;
+    }
 }

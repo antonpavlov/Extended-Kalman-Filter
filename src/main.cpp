@@ -7,6 +7,8 @@
 
 using namespace std;
 
+#define DEBUG   0
+
 // for convenience
 using json = nlohmann::json;
 
@@ -26,7 +28,7 @@ std::string hasData(std::string s) {
 }
 
 int main(){
-    static int counter = 0;
+    static int counter = 0; // Time step counter
     uWS::Hub h;
 
     // Create a Kalman Filter instance
@@ -88,8 +90,11 @@ int main(){
           		iss >> ro_dot;
           		
                 meas_package.raw_measurements_ << ro, theta, ro_dot;
-                std::cout << "RhoOri: " << ro << endl;
-                std::cout << "ThetaOri: " << theta << endl;
+                if (DEBUG == 1){
+                    std::cout << "RhoOri: " << ro << endl;
+                    std::cout << "ThetaOri: " << theta << endl;
+                }
+
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
             }
@@ -133,13 +138,16 @@ int main(){
             cout << "Timestamp: " << counter << endl;
             cout << "Ground truth: " << endl;
             cout << gt_values << endl;
-            
+
             cout << "Estimation: " << endl;
             cout << estimate << endl;
             counter ++;
+            
             // Debug point
-            if (counter == 218){
-                cout<<"Stop Here!"<<endl;
+            if (DEBUG == 1){
+                if (counter == 218){
+                    cout<<"Stop Here!"<<endl; // If necessary, set a breakpoint here on any timestep
+                }
             }
             
             VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
@@ -154,6 +162,9 @@ int main(){
             auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
             // std::cout << msg << std::endl;
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+            
+            // print RMSE to stdout
+            // cout << RMSE(0) << "," << RMSE(1) << "," << RMSE(2) << "," << RMSE(3)<<endl;
 	  
         }
     } else {
