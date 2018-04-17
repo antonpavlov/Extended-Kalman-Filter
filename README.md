@@ -35,9 +35,11 @@ The filter algorithm is initilized with the first measurments. See, ```FusionEKF
 
 ## Simulation Results
 In order to test an EKF trackingapproach a simulation was performed. In that simulation two sensors (lidar and radar) were tracking the object (a blue car) on 2D plane. These results are shown in a figures below.  
-| ![Error in X](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseX.png) |  ![Error in Y](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseY.png) |
-|:---:|:---:|
-| ![Error in VX](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVX.png)  | ![Error in VY](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVY.png)  | 
+
+
+| ![Error in X](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseX.png){:height="50%" width="50%"} |  ![Error in Y](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseY.png){:height="50%" width="50%"} |
+|---:|:---:|
+| ![Error in VX](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVX.png){:height="50%" width="50%"}  | ![Error in VY](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVY.png){:height="50%" width="50%"}  | 
 
 For each component of the state vector, the Extanded Kalman filter performs better when provided with both measurments, from a radar and a lidar sensors.
 
