@@ -1,6 +1,8 @@
 # Extended-Kalman-Filter
 This repository contains an implementation of the Extanded Kalman filter for 2D object tracking based on two different types of observations.
 
+![Error in VY](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/UdacityEKF.gif)
+
 ## Introduction
  For a linear state-space model driven by temporally uncorrelated Gaussian noise, R. E. Kalman derived a recursive algorithm that computes the exact optimal minimum mean square estimate of the hidden state <b>s</b><sub>k</sub> at instant <i>k</i> given a sequence of observations <b>z</b><sub>1:k</sub> = {z<sub>1</sub>, z<sub>2</sub>, . . . , z<sub>k</sub>} from instant 1 up to instant <i>k</i>. However, in many real-world scenarios, the assumptions of linearity and Gaussianity may not be realistic. For these nonlinear, non-Gaussian systems, the recursive estimation problem requires the recursive propagation of the full posterior probability distribution of the hidden state conditioned on the observations. Unfortunately, in a general nonlinear, non-Gaussian setting, there is no analytically tractable solution for exact computation of the optimal MMSE estimate. Approximations become therefore necessary.
 
@@ -9,7 +11,7 @@ There are several different approaches to approximate the posterior distribution
 As an alternative to parametric methods like the EKF, numerical methods such as grid filters attempt to represent the continuous state space by discrete, finite lattices. But these grid filters and Sequential Monte Carlo methods are a whole different story/repo.
 
 ## Dependencies, compilation and running
-In order to successfully run this project, the Term 2 Simulator should be installed. Here is the [link](https://github.com/udacity/self-driving-car-sim/releases) to download it for different platforms. 
+In order to successfully run this project, the Term 2 Simulator ```term2_sim``` should be downloaded. Here is the [link](https://github.com/udacity/self-driving-car-sim/releases) to download it for different platforms. 
 
 From the tools perspective, the following packages are necessary:
 * ```cmake``` >= 3.5
@@ -18,7 +20,9 @@ From the tools perspective, the following packages are necessary:
 
 The filter communicates with simulator via [uWebSocketIO](https://github.com/uWebSockets/uWebSockets).
 
-Run ```ExtendedKF``` and ```term2_sim``` on the same computer. Both applications will connect to each other via port 4567. They will exchange JSON objects containing object trajectory parameters on the simulator side and their estimation on the Extended Kalman filter side. 
+Clone this repo into your computer, install all dependencies into default folders or update ```Makefile``` with your local paths. Compile the program with ```make``` command.
+
+Run the ```ExtendedKF``` and ```term2_sim``` on the same computer. Both applications will connect to each other via port 4567. They will exchange JSON objects containing object trajectory parameters on the simulator side and their estimation on the Extended Kalman filter side. 
 
 This program was tested in Mac OS X 10.13.2 / Xcode 9.2 environment, but it should run in Linux as well.
 
@@ -31,11 +35,11 @@ The filter algorithm is initilized with the first measurments. See, ```FusionEKF
 
 ## Simulation Results
 In order to test an EKF trackingapproach a simulation was performed. In that simulation two sensors (lidar and radar) were tracking the object (a blue car) on 2D plane. These results are shown in a figures below.  
-| 1  |  2 |
-|:-:|:-:|
-| 3  | 4  | 
+| ![Error in X](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseX.png) |  ![Error in Y](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseY.png) |
+|:---:|:---:|
+| ![Error in VX](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVX.png)  | ![Error in VY](https://raw.githubusercontent.com/antonpavlov/Extended-Kalman-Filter/master/support/rmseVY.png)  | 
 
-In each component of the state vector the Extanded Kalman filter performs better when provided with both, radar and lidar tracking data.
+For each component of the state vector, the Extanded Kalman filter performs better when provided with both measurments, from a radar and a lidar sensors.
 
 ## License
 Contents of this repository are licensed under MIT License agreement.
